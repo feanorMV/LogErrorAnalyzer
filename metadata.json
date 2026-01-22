@@ -1,0 +1,5 @@
+{
+  "name": "Log Error Reconciler",
+  "description": "An application to cross-reference an Error Log CSV with source data CSVs to generate a detailed error report.",
+  "requestFramePermissions": []
+}
