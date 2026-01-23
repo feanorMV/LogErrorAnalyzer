@@ -4,6 +4,7 @@ import { FileUpload } from './components/FileUpload';
 import { ReportDisplay } from './components/ReportDisplay';
 import { generateReport, ReportOutput } from './services/logProcessor';
 import { AppIcon, ProcessingIcon } from './components/Icons';
+import { Instructions } from './components/Instructions';
 
 const App: React.FC = () => {
     const [logFile, setLogFile] = useState<File | null>(null);
@@ -66,6 +67,8 @@ const App: React.FC = () => {
                 </header>
 
                 <main className="p-6 md:p-8 space-y-8">
+                    <Instructions />
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-2">
                             <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-300">1. Upload Log File</h2>

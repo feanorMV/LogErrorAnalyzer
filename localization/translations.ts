@@ -1,0 +1,47 @@
+
+export const translations = {
+  uk: {
+    howItWorks: "Як це працює?",
+    step1Title: "1. Завантажте файл логів",
+    step1Description: "Завантажте один CSV файл, що містить опис помилок. Інструмент автоматично знайде колонки \"State\" та \"Description\".",
+    step2Title: "2. Завантажте вихідні файли",
+    step2Description: "Додайте один або декілька CSV файлів, на які посилаються помилки. Імена файлів мають збігатися з тими, що вказані у логах.",
+    step3Title: "3. Створіть звіт",
+    step3Description: "Натисніть кнопку \"Generate Report\", щоб розпочати аналіз. Інструмент співставить помилки з відповідними рядками у вихідних файлах.",
+    step4Title: "4. Отримайте результат",
+    step4Description: "Перегляньте детальний звіт. Ви можете скопіювати його або зберегти у форматах TXT, PDF, CSV, XLSX або DOCX для подальшого аналізу.",
+  },
+  en: {
+    howItWorks: "How it works?",
+    step1Title: "1. Upload the log file",
+    step1Description: "Upload a single CSV file containing error descriptions. The tool will automatically find the \"State\" and \"Description\" columns.",
+    step2Title: "2. Upload the source files",
+    step2Description: "Add one or more CSV files referenced in the errors. The filenames must match those specified in the logs.",
+    step3Title: "3. Generate the report",
+    step3Description: "Click the \"Generate Report\" button to start the analysis. The tool will match errors with the corresponding rows in the source files.",
+    step4Title: "4. Get the result",
+    step4Description: "Review the detailed report. You can copy it or save it in TXT, PDF, CSV, XLSX, or DOCX format for further analysis.",
+  },
+  es: {
+    howItWorks: "¿Cómo funciona?",
+    step1Title: "1. Sube el archivo de logs",
+    step1Description: "Sube un único archivo CSV que contenga las descripciones de los errores. La herramienta encontrará automáticamente las columnas \"State\" y \"Description\".",
+    step2Title: "2. Sube los archivos de origen",
+    step2Description: "Añade uno o más archivos CSV a los que se hace referencia en los errores. Los nombres de los archivos deben coincidir con los especificados en los logs.",
+    step3Title: "3. Genera el informe",
+    step3Description: "Haz clic en el botón \"Generate Report\" para iniciar el análisis. La herramienta asociará los errores con las filas correspondientes en los archivos de origen.",
+    step4Title: "4. Obtén el resultado",
+    step4Description: "Revisa el informe detallado. Puedes copiarlo o guardarlo en formato TXT, PDF, CSV, XLSX o DOCX para un análisis posterior.",
+  },
+  pt: {
+    howItWorks: "Como funciona?",
+    step1Title: "1. Carregue o arquivo de log",
+    step1Description: "Carregue um único arquivo CSV contendo as descrições dos erros. A ferramenta encontrará automaticamente as colunas \"State\" e \"Description\".",
+    step2Title: "2. Carregue os arquivos de origem",
+    step2Description: "Adicione um ou mais arquivos CSV referenciados nos erros. Os nomes dos arquivos devem corresponder aos especificados nos logs.",
+    step3Title: "3. Gere o relatório",
+    step3Description: "Clique no botão \"Generate Report\" para iniciar a análise. A ferramenta irá corresponder os erros com as linhas correspondentes nos arquivos de origem.",
+    step4Title: "4. Obtenha o resultado",
+    step4Description: "Reveja o relatório detalhado. Você pode copiá-lo ou salvá-lo nos formatos TXT, PDF, CSV, XLSX ou DOCX para análise posterior.",
+  }
+};
