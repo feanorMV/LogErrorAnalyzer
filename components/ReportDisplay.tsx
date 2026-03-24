@@ -3,7 +3,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { CopyIcon, CheckIcon, SaveIcon, ChevronDownIcon } from './Icons';
 import { ReportOutput } from '../services/logProcessor';
 import { jsPDF } from 'jspdf';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import * as XLSX from 'xlsx';
 
 interface ReportDisplayProps {
@@ -100,20 +100,24 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
             }
             for (const errorMessage in reportData) {
                 for (const file in reportData[errorMessage]) {
-                    for (const error of reportData[errorMessage][file]) {
-                        data.push({
-                            'Type': 'Error',
-                            'Details': errorMessage,
-                            'Filename': file,
-                            'Line Number': error.lineNumber,
-                            'Row Data': error.rowData,
-                        });
-                    }
-                     if (reportData[errorMessage][file].length === 0) {
+                    const reconciledErrors = reportData[errorMessage][file];
+                    if (reconciledErrors.length > 0) {
+                        for (const error of reconciledErrors) {
+                            data.push({
+                                'Type': 'Error',
+                                'Details': errorMessage,
+                                'Filename': file,
+                                'Line Number': error.lineNumber,
+                                'Row Data': error.rowData,
+                            });
+                        }
+                    } else { // Handle General Errors
                          data.push({
                             'Type': 'Error',
                             'Details': errorMessage,
                             'Filename': file,
+                            'Line Number': '',
+                            'Row Data': '',
                          });
                     }
                 }
@@ -130,22 +134,57 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
             }
         } else if (format === 'docx') {
             const children: (Paragraph)[] = [];
-             for (const errorMessage in reportData) {
-                children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, text: `Error: ${errorMessage}` }));
-                for (const filename in reportData[errorMessage]) {
-                    children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, text: `File: ${filename}` }));
-                    for (const error of reportData[errorMessage][filename]) {
-                         children.push(new Paragraph({
-                            children: [
-                                new TextRun({ text: `  Line ${error.lineNumber}: `, bold: true }),
-                                new TextRun(error.rowData),
-                            ],
-                            style: "wellSpaced"
-                        }));
+            
+            if (warnings.length > 0) {
+                children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, text: "Warnings", spacing: { after: 200 } }));
+                warnings.forEach(w => children.push(new Paragraph({ text: `- ${w}`, style: "ListParagraph" })));
+                children.push(new Paragraph("")); // Spacer
+            }
+             
+            if (Object.keys(reportData).length > 0) {
+                for (const errorMessage in reportData) {
+                    children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, text: `Error: ${errorMessage}`, spacing: { after: 200 } }));
+                    for (const filename in reportData[errorMessage]) {
+                        children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, text: `File: ${filename}`, spacing: { after: 100 } }));
+                        const reconciledErrors = reportData[errorMessage][filename];
+                        if (reconciledErrors.length > 0) {
+                            for (const error of reconciledErrors) {
+                                children.push(new Paragraph({
+                                    children: [
+                                        new TextRun({ text: `  Line ${error.lineNumber}: `, bold: true }),
+                                        new TextRun(error.rowData),
+                                    ],
+                                    spacing: { after: 80 }
+                                }));
+                            }
+                        } else if (filename === 'General Error') {
+                            children.push(new Paragraph({
+                                children: [ new TextRun({ text: `  (This is a general error with no specific file or line number.)`, italics: true }) ],
+                                spacing: { after: 80 }
+                            }));
+                        }
                     }
                 }
             }
-            const doc = new Document({ sections: [{ children }] });
+            
+            if (children.length === 0) {
+                children.push(new Paragraph({ text: "No reconcilable errors found in the provided files." }));
+            }
+
+            const doc = new Document({ 
+                sections: [{ children }],
+                styles: {
+                    paragraphStyles: [{
+                        id: "ListParagraph",
+                        name: "List Paragraph",
+                        basedOn: "Normal",
+                        quickFormat: true,
+                        paragraph: {
+                            indent: { left: 720 }, // 0.5 inch indent
+                        },
+                    }],
+                },
+            });
             const blob = await Packer.toBlob(doc);
             downloadBlob(blob, filename);
         }
@@ -212,7 +251,7 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                     <div className="p-4 text-center text-slate-500">No reconcilable errors found in the provided files.</div>
                  )}
                  {Object.entries(reportData).map(([errorMessage, files], errorIndex) => {
-                     const totalErrors = Object.values(files).reduce((acc, fileErrors) => acc + fileErrors.length, 0) || 1;
+                     const totalErrors = Object.values(files).reduce((acc, fileErrors) => acc + (fileErrors.length || 1), 0);
                      return (
                         <Collapsible 
                             key={errorIndex} 
@@ -223,11 +262,15 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                                 <Collapsible 
                                     key={`${errorIndex}-${fileIndex}`} 
                                     level={1} 
-                                    title={<span><span className="font-light text-slate-500 mr-2">File:</span> {filename}</span>}
+                                    title={
+                                        filename === 'General Error'
+                                        ? <span className="italic text-amber-600 dark:text-amber-400">General Error</span>
+                                        : <span><span className="font-light text-slate-500 mr-2">File:</span> {filename}</span>
+                                    }
                                     count={reconciledErrors.length > 0 ? reconciledErrors.length : undefined}
                                 >
                                     {filename === 'General Error' ? (
-                                        <div className="text-slate-500 italic px-4 py-2 text-xs md:text-sm" style={{ paddingLeft: '3.5rem' }}>This is a general error with no specific file or line number.</div>
+                                        <div className="text-slate-500 dark:text-slate-400 italic px-4 py-2 text-xs md:text-sm" style={{ paddingLeft: '3.5rem' }}>This is a general error with no specific file or line number.</div>
                                     ) : (
                                         <div className="font-mono text-xs md:text-sm space-y-1 py-2 pr-4" style={{ paddingLeft: '2.25rem' }}>
                                             {reconciledErrors.map(({ lineNumber, rowData }, index) => (

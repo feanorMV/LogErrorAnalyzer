@@ -23,8 +23,8 @@ const readFileAsText = (file: File): Promise<string> => {
 
 const parseLineNumbers = (linesStr: string): number[] => {
     const numbers: Set<number> = new Set();
-    // Also split by space in case of truncation
-    const parts = linesStr.split(/[, ]+/);
+    // Split by comma only, to correctly handle ranges with spaces like "5 - 10".
+    const parts = linesStr.split(','); 
     for (const part of parts) {
         const trimmedPart = part.trim();
         if (!trimmedPart) continue;
