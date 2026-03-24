@@ -5,6 +5,7 @@ export interface ReportOutput {
     reportString: string;
     reportData: ReportData;
     warnings: string[];
+    fileHeaders: Record<string, string[]>;
 }
 
 // This regex has been updated to be less strict:
@@ -46,25 +47,33 @@ const parseLineNumbers = (linesStr: string): number[] => {
     return Array.from(numbers).sort((a, b) => a - b);
 };
 
+export const detectDelimiter = (headerLine: string): string => {
+    const commaCount = (headerLine.match(/,/g) || []).length;
+    const semicolonCount = (headerLine.match(/;/g) || []).length;
+    return commaCount > semicolonCount ? ',' : ';';
+};
+
+// A robust CSV row parser that handles quoted fields containing the delimiter.
+export const parseCsvRow = (row: string, delimiter: string = ';'): string[] => {
+    // This regex splits by the delimiter, but ignores it inside double-quoted strings.
+    const regex = new RegExp(`\\${delimiter}(?=(?:(?:[^"]*"){2})*[^"]*$)`);
+    return row.split(regex).map(v => {
+        let value = v.trim();
+        // Remove surrounding quotes if they exist
+        if (value.startsWith('"') && value.endsWith('"')) {
+            value = value.substring(1, value.length - 1);
+        }
+        // Replace escaped double quotes "" with a single quote "
+        return value.replace(/""/g, '"');
+    });
+};
+
 const parseLogCsv = (logContent: string): { errors: ParsedLogError[], warnings: string[] } => {
     const lines = logContent.trim().split(/\r?\n/);
     if (lines.length < 2) return { errors: [], warnings: [] };
 
-    // A robust CSV row parser that handles quoted fields containing the delimiter.
-    const parseCsvRow = (row: string): string[] => {
-        // This regex splits by semicolon, but ignores semicolons inside double-quoted strings.
-        return row.split(/;(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => {
-            let value = v.trim();
-            // Remove surrounding quotes if they exist
-            if (value.startsWith('"') && value.endsWith('"')) {
-                value = value.substring(1, value.length - 1);
-            }
-            // Replace escaped double quotes "" with a single quote "
-            return value.replace(/""/g, '"');
-        });
-    };
-
-    const header = parseCsvRow(lines[0]);
+    const logDelimiter = detectDelimiter(lines[0]);
+    const header = parseCsvRow(lines[0], logDelimiter);
     const stateIndex = header.indexOf('State');
     const descriptionIndex = header.indexOf('Description');
 
@@ -79,7 +88,7 @@ const parseLogCsv = (logContent: string): { errors: ParsedLogError[], warnings: 
         const row = lines[i];
         if (!row.trim()) continue; // Skip empty or whitespace-only lines
 
-        const values = parseCsvRow(row);
+        const values = parseCsvRow(row, logDelimiter);
         
         if (values.length > Math.max(stateIndex, descriptionIndex) && values[stateIndex] === 'Error') {
             const description = values[descriptionIndex] || '';
@@ -179,6 +188,7 @@ export const generateReport = async (logFile: File, sourceFiles: FileList): Prom
 
     const reportData: ReportData = {};
     const warnings: string[] = [...parsingWarnings];
+    const fileHeaders: Record<string, string[]> = {};
 
     for (const filename in errorsByFile) {
         if (filename === 'General Error') {
@@ -202,6 +212,12 @@ export const generateReport = async (logFile: File, sourceFiles: FileList): Prom
             const sourceContent = await readFileAsText(sourceFile);
             const sourceLines = sourceContent.trim().split(/\r?\n/);
             const fileErrors = errorsByFile[filename];
+            
+            let sourceDelimiter = ';';
+            if (sourceLines.length > 0) {
+                sourceDelimiter = detectDelimiter(sourceLines[0]);
+                fileHeaders[filename] = parseCsvRow(sourceLines[0], sourceDelimiter);
+            }
 
             fileErrors.forEach(error => {
                 if (!reportData[error.errorMessage]) {
@@ -223,9 +239,11 @@ export const generateReport = async (logFile: File, sourceFiles: FileList): Prom
                     const sourceLineIndex = logLineNumber - 1;
                     
                     if (sourceLineIndex >= 0 && sourceLineIndex < sourceLines.length) {
+                        const rawRowData = sourceLines[sourceLineIndex].trim();
                         reportData[error.errorMessage][filename].push({
                             lineNumber: logLineNumber, // Report the original line number from the log
-                            rowData: sourceLines[sourceLineIndex].trim(),
+                            rowData: rawRowData,
+                            parsedRowData: parseCsvRow(rawRowData, sourceDelimiter),
                         });
                     } else {
                         warnings.push(`Line number ${logLineNumber} for file "${filename}" is out of range.`);
@@ -242,5 +260,5 @@ export const generateReport = async (logFile: File, sourceFiles: FileList): Prom
 
     const reportString = formatReport(reportData, warnings);
     
-    return { reportString, reportData, warnings };
+    return { reportString, reportData, warnings, fileHeaders };
 };

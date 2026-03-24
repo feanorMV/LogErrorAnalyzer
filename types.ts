@@ -8,6 +8,7 @@ export interface ParsedLogError {
 export interface ReconciledError {
   lineNumber: number;
   rowData: string;
+  parsedRowData?: string[];
 }
 
 export interface ReportData {

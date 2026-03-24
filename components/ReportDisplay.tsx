@@ -52,7 +52,7 @@ const Collapsible: React.FC<{ title: React.ReactNode; children: React.ReactNode;
 
 
 export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) => {
-    const { reportString, reportData, warnings } = reportOutput;
+    const { reportString, reportData, warnings, fileHeaders } = reportOutput;
     const [copied, setCopied] = useState(false);
     const [isSaveMenuOpen, setIsSaveMenuOpen] = useState(false);
     const saveMenuRef = useRef<HTMLDivElement>(null);
@@ -94,43 +94,75 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
             doc.text(lines, 10, 10);
             doc.save(filename);
         } else if (format === 'csv' || format === 'xlsx') {
-            const data = [];
-            if(warnings.length > 0) {
-                 warnings.forEach(w => data.push({ 'Type': 'Warning', 'Details': w }));
+            const workbook = XLSX.utils.book_new();
+            const summaryData: any[][] = [];
+            
+            if (warnings.length > 0) {
+                summaryData.push(['--- WARNINGS ---']);
+                warnings.forEach(w => summaryData.push(['Warning', w]));
+                summaryData.push([]);
             }
+            
+            const generalErrors: any[][] = [];
             for (const errorMessage in reportData) {
-                for (const file in reportData[errorMessage]) {
-                    const reconciledErrors = reportData[errorMessage][file];
-                    if (reconciledErrors.length > 0) {
-                        for (const error of reconciledErrors) {
-                            data.push({
-                                'Type': 'Error',
-                                'Details': errorMessage,
-                                'Filename': file,
-                                'Line Number': error.lineNumber,
-                                'Row Data': error.rowData,
-                            });
-                        }
-                    } else { // Handle General Errors
-                         data.push({
-                            'Type': 'Error',
-                            'Details': errorMessage,
-                            'Filename': file,
-                            'Line Number': '',
-                            'Row Data': '',
-                         });
+                if (reportData[errorMessage]['General Error']) {
+                    generalErrors.push(['Error', errorMessage]);
+                }
+            }
+            if (generalErrors.length > 0) {
+                summaryData.push(['--- GENERAL ERRORS ---']);
+                generalErrors.forEach(e => summaryData.push(e));
+                summaryData.push([]);
+            }
+
+            if (summaryData.length > 0 && format === 'xlsx') {
+                const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+                XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+            }
+
+            const fileDataMap: Record<string, any[][]> = {};
+            
+            for (const errorMessage in reportData) {
+                for (const filename in reportData[errorMessage]) {
+                    if (filename === 'General Error') continue;
+                    
+                    if (!fileDataMap[filename]) {
+                        const headers = fileHeaders?.[filename] || ['Row Data'];
+                        fileDataMap[filename] = [['Error Message', 'Filename', 'Line Number', ...headers]];
+                    }
+                    
+                    const reconciledErrors = reportData[errorMessage][filename];
+                    for (const error of reconciledErrors) {
+                        const rowValues = error.parsedRowData || [error.rowData];
+                        fileDataMap[filename].push([errorMessage, filename, error.lineNumber, ...rowValues]);
                     }
                 }
             }
-            const worksheet = XLSX.utils.json_to_sheet(data);
-            if (format === 'csv') {
-                const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+
+            if (format === 'xlsx') {
+                for (const filename in fileDataMap) {
+                    let sheetName = filename.replace(/[\\/?*\[\]]/g, '_').substring(0, 31);
+                    const worksheet = XLSX.utils.aoa_to_sheet(fileDataMap[filename]);
+                    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+                }
+                if (workbook.SheetNames.length === 0) {
+                    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['No errors found']]), 'Errors');
+                }
+                XLSX.writeFile(workbook, filename);
+            } else {
+                const combinedData: any[][] = [...summaryData];
+                for (const filename in fileDataMap) {
+                    combinedData.push([`--- FILE: ${filename} ---`]);
+                    combinedData.push(...fileDataMap[filename]);
+                    combinedData.push([]);
+                }
+                if (combinedData.length === 0) {
+                    combinedData.push(['No errors found']);
+                }
+                const combinedSheet = XLSX.utils.aoa_to_sheet(combinedData);
+                const csvOutput = XLSX.utils.sheet_to_csv(combinedSheet);
                 const blob = new Blob([csvOutput], { type: 'text/csv;charset=utf-8;' });
                 downloadBlob(blob, filename);
-            } else {
-                 const workbook = XLSX.utils.book_new();
-                 XLSX.utils.book_append_sheet(workbook, worksheet, 'Errors');
-                 XLSX.writeFile(workbook, filename);
             }
         } else if (format === 'docx') {
             const children: (Paragraph)[] = [];
