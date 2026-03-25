@@ -55,6 +55,18 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
     const { reportString, reportData, warnings, fileHeaders } = reportOutput;
     const [copied, setCopied] = useState(false);
     const [isSaveMenuOpen, setIsSaveMenuOpen] = useState(false);
+
+    let totalErrors = 0;
+    const filesWithErrorsSet = new Set<string>();
+    for (const errorMessage in reportData) {
+        for (const filename in reportData[errorMessage]) {
+            totalErrors += reportData[errorMessage][filename].length;
+            if (filename !== 'General Error') {
+                filesWithErrorsSet.add(filename);
+            }
+        }
+    }
+    const totalFilesWithErrors = filesWithErrorsSet.size;
     const saveMenuRef = useRef<HTMLDivElement>(null);
 
     const getTimestamp = () => {
@@ -115,12 +127,8 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                 summaryData.push([]);
             }
 
-            if (summaryData.length > 0 && format === 'xlsx') {
-                const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-                XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
-            }
-
             const fileDataMap: Record<string, any[][]> = {};
+            let hasFileErrors = false;
             
             for (const errorMessage in reportData) {
                 for (const filename in reportData[errorMessage]) {
@@ -133,28 +141,74 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                     
                     const reconciledErrors = reportData[errorMessage][filename];
                     for (const error of reconciledErrors) {
+                        hasFileErrors = true;
                         const rowValues = error.parsedRowData || [error.rowData];
                         fileDataMap[filename].push([errorMessage, filename, error.lineNumber, ...rowValues]);
                     }
                 }
             }
 
-            if (format === 'xlsx') {
+            if (hasFileErrors) {
+                summaryData.push(['--- ERRORS BY FILE ---']);
+                summaryData.push([]);
                 for (const filename in fileDataMap) {
-                    let sheetName = filename.replace(/[\\/?*\[\]]/g, '_').substring(0, 31);
-                    const worksheet = XLSX.utils.aoa_to_sheet(fileDataMap[filename]);
-                    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+                    summaryData.push([`--- FILE: ${filename} ---`]);
+                    summaryData.push(...fileDataMap[filename]);
+                    summaryData.push([]);
+                    summaryData.push([]);
                 }
-                if (workbook.SheetNames.length === 0) {
-                    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['No errors found']]), 'Errors');
+            }
+
+            const byErrorData: any[][] = [];
+            if (hasFileErrors) {
+                byErrorData.push(['--- ERRORS BY MESSAGE ---']);
+                byErrorData.push([]);
+                for (const errorMessage in reportData) {
+                    let hasErrorsForMessage = false;
+                    const errorSection: any[][] = [[`--- ERROR: ${errorMessage} ---`], []];
+                    
+                    for (const filename in reportData[errorMessage]) {
+                        if (filename === 'General Error') continue;
+                        hasErrorsForMessage = true;
+                        const headers = fileHeaders?.[filename] || ['Row Data'];
+                        errorSection.push([`--- FILE: ${filename} ---`]);
+                        errorSection.push(['Filename', 'Line Number', ...headers]);
+                        
+                        const reconciledErrors = reportData[errorMessage][filename];
+                        for (const error of reconciledErrors) {
+                            const rowValues = error.parsedRowData || [error.rowData];
+                            errorSection.push([filename, error.lineNumber, ...rowValues]);
+                        }
+                        errorSection.push([]);
+                    }
+                    
+                    if (hasErrorsForMessage) {
+                        byErrorData.push(...errorSection);
+                        byErrorData.push([]);
+                    }
+                }
+            }
+
+            if (format === 'xlsx') {
+                if (summaryData.length === 0 && byErrorData.length === 0) {
+                    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['No errors found']]), 'Summary');
+                } else {
+                    if (summaryData.length > 0) {
+                        const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+                        XLSX.utils.book_append_sheet(workbook, summarySheet, 'By File');
+                    }
+                    if (byErrorData.length > 0) {
+                        const byErrorSheet = XLSX.utils.aoa_to_sheet(byErrorData);
+                        XLSX.utils.book_append_sheet(workbook, byErrorSheet, 'By Error');
+                    }
                 }
                 XLSX.writeFile(workbook, filename);
             } else {
                 const combinedData: any[][] = [...summaryData];
-                for (const filename in fileDataMap) {
-                    combinedData.push([`--- FILE: ${filename} ---`]);
-                    combinedData.push(...fileDataMap[filename]);
+                if (byErrorData.length > 0) {
                     combinedData.push([]);
+                    combinedData.push([]);
+                    combinedData.push(...byErrorData);
                 }
                 if (combinedData.length === 0) {
                     combinedData.push(['No errors found']);
@@ -224,10 +278,20 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
 
 
     return (
-        <div className="relative bg-slate-50 dark:bg-slate-900/70 rounded-lg shadow-inner overflow-hidden">
-            <div className="absolute top-3 right-3 flex items-center space-x-2 z-20">
-                <div className="relative" ref={saveMenuRef}>
-                    <button
+        <div className="flex flex-col bg-slate-50 dark:bg-slate-900/70 rounded-lg shadow-inner overflow-hidden">
+            <div className="flex justify-between items-center p-3 bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/50 z-20">
+                <div className="text-sm text-slate-600 dark:text-slate-300 px-2 flex items-center flex-wrap">
+                    <span className="font-semibold text-slate-800 dark:text-slate-100 mr-1">{totalErrors}</span> errors in 
+                    <span className="font-semibold text-slate-800 dark:text-slate-100 ml-1 mr-1">{totalFilesWithErrors}</span> files
+                    {warnings && warnings.length > 0 && (
+                        <span className="ml-2 text-amber-600 dark:text-amber-400">
+                            ({warnings.length} warning{warnings.length !== 1 ? 's' : ''})
+                        </span>
+                    )}
+                </div>
+                <div className="flex items-center space-x-2">
+                    <div className="relative" ref={saveMenuRef}>
+                        <button
                         onClick={() => setIsSaveMenuOpen(prev => !prev)}
                         className="flex items-center px-3 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-md hover:bg-slate-300 dark:hover:bg-slate-600 transition text-sm"
                         aria-label="Open save options"
@@ -264,8 +328,9 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                         </>
                     )}
                 </button>
+                </div>
             </div>
-            <div className="pt-12 max-h-[60vh] overflow-y-auto">
+            <div className="max-h-[60vh] overflow-y-auto">
                  {warnings && warnings.length > 0 && (
                     <Collapsible 
                         title={<span className="text-amber-600 dark:text-amber-400">Warnings</span>} 
