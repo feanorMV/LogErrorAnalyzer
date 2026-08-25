@@ -18,7 +18,7 @@ const InstructionStep: React.FC<{
     children: React.ReactNode;
 }> = ({ icon, title, children }) => (
     <div className="flex items-start space-x-4">
-        <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400">
+        <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-leafio-100 dark:bg-leafio-900/50 text-leafio-600 dark:text-leafio-400">
             {icon}
         </div>
         <div>
@@ -44,7 +44,7 @@ export const Instructions: React.FC = () => {
                 aria-controls="instructions-content"
             >
                 <div className="flex items-center">
-                    <InfoIcon className="w-6 h-6 mr-3 text-sky-600 dark:text-sky-400" />
+                    <InfoIcon className="w-6 h-6 mr-3 text-leafio-600 dark:text-leafio-400" />
                     <span className="font-semibold text-lg text-slate-700 dark:text-slate-200">{t.howItWorks}</span>
                 </div>
                 <ChevronDownIcon className={`w-6 h-6 text-slate-500 transform transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
@@ -61,7 +61,7 @@ export const Instructions: React.FC = () => {
                                 }}
                                 className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
                                     language === code 
-                                    ? 'bg-sky-600 text-white' 
+                                    ? 'bg-leafio-600 text-white'
                                     : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                                 }`}
                             >

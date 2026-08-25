@@ -94,7 +94,7 @@ const App: React.FC = () => {
                         <button
                             onClick={handleGenerateReport}
                             disabled={!logFile || !sourceFiles || isLoading}
-                            className="w-full flex items-center justify-center bg-sky-600 hover:bg-sky-700 disabled:bg-slate-400 dark:disabled:bg-slate-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-sky-300 dark:focus:ring-sky-800 disabled:cursor-not-allowed"
+                            className="w-full flex items-center justify-center bg-leafio-600 hover:bg-leafio-700 disabled:bg-slate-400 dark:disabled:bg-slate-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-leafio-100 dark:focus:ring-leafio-900 disabled:cursor-not-allowed"
                         >
                             {isLoading ? (
                                 <>

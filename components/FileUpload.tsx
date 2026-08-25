@@ -48,7 +48,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, label, acc
         onFileSelect(e.target.files);
     };
 
-    const dragClass = isDragging ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/50' : 'border-slate-300 dark:border-slate-600 hover:border-sky-400 dark:hover:border-sky-500';
+    const dragClass = isDragging ? 'border-leafio-500 bg-leafio-50 dark:bg-leafio-900/50' : 'border-slate-300 dark:border-slate-600 hover:border-leafio-400 dark:hover:border-leafio-500';
 
     return (
         <label
@@ -61,7 +61,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, label, acc
             <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
                 <UploadIcon className="w-8 h-8 mb-3 text-slate-400 dark:text-slate-500" />
                 <p className="mb-2 text-sm text-slate-500 dark:text-slate-400">
-                    <span className="font-semibold text-sky-600 dark:text-sky-400">{label}</span> or drag and drop
+                    <span className="font-semibold text-leafio-600 dark:text-leafio-400">{label}</span> or drag and drop
                 </p>
                 {selectedFile ? (
                      <p className="text-xs text-green-600 dark:text-green-400 font-semibold truncate max-w-full px-4">{selectedFile}</p>
