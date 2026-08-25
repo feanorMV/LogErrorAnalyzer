@@ -18,12 +18,12 @@ const InstructionStep: React.FC<{
     children: React.ReactNode;
 }> = ({ icon, title, children }) => (
     <div className="flex items-start space-x-4">
-        <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-leafio-100 dark:bg-leafio-900/50 text-leafio-600 dark:text-leafio-400">
+        <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-leafio-100 text-leafio-600">
             {icon}
         </div>
         <div>
-            <h4 className="font-bold text-slate-800 dark:text-slate-100">{title}</h4>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{children}</p>
+            <h4 className="font-bold text-slate-800">{title}</h4>
+            <p className="text-sm text-slate-600 mt-1">{children}</p>
         </div>
     </div>
 );
@@ -36,7 +36,7 @@ export const Instructions: React.FC = () => {
     const t = translations[language];
 
     return (
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/50 mb-8">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
             <button
                 onClick={() => setIsOpen(prev => !prev)}
                 className="w-full flex items-center justify-between p-4 text-left focus:outline-none"
@@ -44,13 +44,13 @@ export const Instructions: React.FC = () => {
                 aria-controls="instructions-content"
             >
                 <div className="flex items-center">
-                    <InfoIcon className="w-6 h-6 mr-3 text-leafio-600 dark:text-leafio-400" />
-                    <span className="font-semibold text-lg text-slate-700 dark:text-slate-200">{t.howItWorks}</span>
+                    <InfoIcon className="w-6 h-6 mr-3 text-leafio-600" />
+                    <span className="font-semibold text-lg text-slate-700">{t.howItWorks}</span>
                 </div>
                 <ChevronDownIcon className={`w-6 h-6 text-slate-500 transform transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
             </button>
             {isOpen && (
-                <div id="instructions-content" className="border-t border-slate-200 dark:border-slate-700/50">
+                <div id="instructions-content" className="border-t border-slate-200">
                     <div className="px-6 pt-4 flex justify-end items-center space-x-1">
                         {languages.map(({ code, name }) => (
                             <button
@@ -62,7 +62,7 @@ export const Instructions: React.FC = () => {
                                 className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
                                     language === code 
                                     ? 'bg-leafio-600 text-white'
-                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                                    : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
                                 }`}
                             >
                                 {name}

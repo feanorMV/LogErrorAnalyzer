@@ -54,47 +54,51 @@ const App: React.FC = () => {
     }, [logFile, sourceFiles]);
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
-            <div className="w-full max-w-4xl bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden">
-                <header className="p-6 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center space-x-4">
-                        <AppIcon />
-                        <div>
-                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Log Error Reconciler</h1>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">Upload logs and source files to generate a consolidated error report.</p>
+        <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 lg:p-8 font-sans">
+            <div className="w-full max-w-4xl">
+                <header className="mb-7">
+                    <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-leafio-600 flex items-center justify-center">
+                            <AppIcon className="w-6 h-6 text-white" />
                         </div>
+                        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-leafio-600">Log Error Reconciler</h1>
                     </div>
+                    <p className="mt-2 text-slate-500">Upload logs and source files to generate a consolidated error report.</p>
                 </header>
 
-                <main className="p-6 md:p-8 space-y-8">
+                <main className="space-y-5">
                     <Instructions />
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-2">
-                            <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-300">1. Upload Log File</h2>
-                            <FileUpload 
-                                onFileSelect={handleLogFileSelect} 
-                                label="Select log.csv" 
-                                accept=".csv" 
-                                multiple={false}
-                                selectedFile={logFile?.name} />
+
+                    <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-4">1 &middot; Upload files</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <h3 className="text-sm font-semibold text-slate-700">Log file</h3>
+                                <FileUpload
+                                    onFileSelect={handleLogFileSelect}
+                                    label="Select log.csv"
+                                    accept=".csv"
+                                    multiple={false}
+                                    selectedFile={logFile?.name} />
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-sm font-semibold text-slate-700">Source data</h3>
+                                <FileUpload
+                                    onFileSelect={handleSourceFilesSelect}
+                                    label="Select source CSVs"
+                                    accept=".csv"
+                                    multiple={true}
+                                    selectedFile={sourceFiles ? `${sourceFiles.length} file(s) selected` : undefined}/>
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-300">2. Upload Source Data</h2>
-                            <FileUpload 
-                                onFileSelect={handleSourceFilesSelect} 
-                                label="Select source CSVs" 
-                                accept=".csv" 
-                                multiple={true} 
-                                selectedFile={sourceFiles ? `${sourceFiles.length} file(s) selected` : undefined}/>
-                        </div>
-                    </div>
-                    
-                    <div>
+                    </section>
+
+                    <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-4">2 &middot; Generate report</h2>
                         <button
                             onClick={handleGenerateReport}
                             disabled={!logFile || !sourceFiles || isLoading}
-                            className="w-full flex items-center justify-center bg-leafio-600 hover:bg-leafio-700 disabled:bg-slate-400 dark:disabled:bg-slate-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-leafio-100 dark:focus:ring-leafio-900 disabled:cursor-not-allowed"
+                            className="w-full flex items-center justify-center bg-leafio-600 hover:bg-leafio-700 disabled:bg-slate-400 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-leafio-100 disabled:cursor-not-allowed"
                         >
                             {isLoading ? (
                                 <>
@@ -105,26 +109,27 @@ const App: React.FC = () => {
                                 'Generate Report'
                             )}
                         </button>
-                    </div>
 
-                    {error && (
-                        <div className="bg-red-100 dark:bg-red-900/50 border-l-4 border-red-500 text-red-700 dark:text-red-300 p-4 rounded-md" role="alert">
-                            <p className="font-bold">Error</p>
-                            <p>{error}</p>
-                        </div>
-                    )}
-                    
+                        {error && (
+                            <div className="mt-4 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
+                                <p className="font-bold">Error</p>
+                                <p>{error}</p>
+                            </div>
+                        )}
+                    </section>
+
                     {report && (
-                        <div>
-                            <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200">Generated Report</h2>
+                        <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                            <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-4">3 &middot; Generated report</h2>
                             <ReportDisplay reportOutput={report} />
-                        </div>
+                        </section>
                     )}
                 </main>
+
+                <footer className="text-center mt-8 text-sm text-slate-500">
+                    <p>Built with React, Tailwind CSS, and TypeScript.</p>
+                </footer>
             </div>
-             <footer className="text-center mt-8 text-sm text-slate-500 dark:text-slate-400">
-                <p>Built with React, Tailwind CSS, and TypeScript.</p>
-            </footer>
         </div>
     );
 };

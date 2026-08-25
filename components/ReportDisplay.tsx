@@ -30,19 +30,19 @@ const Collapsible: React.FC<{ title: React.ReactNode; children: React.ReactNode;
     };
 
     return (
-        <div className="border-b border-slate-200 dark:border-slate-800 last:border-b-0">
+        <div className="border-b border-slate-200 last:border-b-0">
             <button
                 onClick={() => setIsOpen(prev => !prev)}
-                className="w-full flex items-center text-left py-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 focus:outline-none focus:bg-slate-100 dark:focus:bg-slate-800/50 transition-colors"
+                className="w-full flex items-center text-left py-3 hover:bg-slate-100 focus:outline-none focus:bg-slate-100 transition-colors"
                 style={paddingLeft}
                 aria-expanded={isOpen}
             >
                 <ChevronDownIcon className={`w-5 h-5 mr-3 transform transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-0' : '-rotate-90'}`} />
-                <span className="flex-1 font-medium text-slate-700 dark:text-slate-300">{title}</span>
-                {count !== undefined && <span className="text-xs font-mono bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full px-2 py-0.5 mr-4">{count}</span>}
+                <span className="flex-1 font-medium text-slate-700">{title}</span>
+                {count !== undefined && <span className="text-xs font-mono bg-slate-200 text-slate-600 rounded-full px-2 py-0.5 mr-4">{count}</span>}
             </button>
             {isOpen && (
-                <div className="pb-2 bg-white dark:bg-slate-900/70">
+                <div className="pb-2 bg-white">
                     {children}
                 </div>
             )}
@@ -278,13 +278,13 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
 
 
     return (
-        <div className="flex flex-col bg-slate-50 dark:bg-slate-900/70 rounded-lg shadow-inner overflow-hidden">
-            <div className="flex justify-between items-center p-3 bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/50 z-20">
-                <div className="text-sm text-slate-600 dark:text-slate-300 px-2 flex items-center flex-wrap">
-                    <span className="font-semibold text-slate-800 dark:text-slate-100 mr-1">{totalErrors}</span> errors in 
-                    <span className="font-semibold text-slate-800 dark:text-slate-100 ml-1 mr-1">{totalFilesWithErrors}</span> files
+        <div className="flex flex-col bg-slate-50 rounded-lg shadow-inner overflow-hidden">
+            <div className="flex justify-between items-center p-3 bg-slate-100 border-b border-slate-200 z-20">
+                <div className="text-sm text-slate-600 px-2 flex items-center flex-wrap">
+                    <span className="font-semibold text-slate-800 mr-1">{totalErrors}</span> errors in 
+                    <span className="font-semibold text-slate-800 ml-1 mr-1">{totalFilesWithErrors}</span> files
                     {warnings && warnings.length > 0 && (
-                        <span className="ml-2 text-amber-600 dark:text-amber-400">
+                        <span className="ml-2 text-amber-600">
                             ({warnings.length} warning{warnings.length !== 1 ? 's' : ''})
                         </span>
                     )}
@@ -293,7 +293,7 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                     <div className="relative" ref={saveMenuRef}>
                         <button
                         onClick={() => setIsSaveMenuOpen(prev => !prev)}
-                        className="flex items-center px-3 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-md hover:bg-slate-300 dark:hover:bg-slate-600 transition text-sm"
+                        className="flex items-center px-3 py-1 bg-slate-200 text-slate-600 rounded-md hover:bg-slate-300 transition text-sm"
                         aria-label="Open save options"
                     >
                         <SaveIcon className="w-4 h-4 mr-2" />
@@ -301,13 +301,13 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                         <ChevronDownIcon className="w-4 h-4 ml-1" />
                     </button>
                     {isSaveMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-slate-800 rounded-md shadow-lg z-10 border border-slate-200 dark:border-slate-700">
-                            <ul className="py-1 text-sm text-slate-700 dark:text-slate-200">
-                                <li><button onClick={createSaveHandler('txt')} className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700">TXT</button></li>
-                                <li><button onClick={createSaveHandler('pdf')} className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700">PDF</button></li>
-                                <li><button onClick={createSaveHandler('csv')} className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700">CSV</button></li>
-                                <li><button onClick={createSaveHandler('xlsx')} className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700">XLSX</button></li>
-                                <li><button onClick={createSaveHandler('docx')} className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700">DOCX</button></li>
+                        <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10 border border-slate-200">
+                            <ul className="py-1 text-sm text-slate-700">
+                                <li><button onClick={createSaveHandler('txt')} className="w-full text-left px-4 py-2 hover:bg-slate-100">TXT</button></li>
+                                <li><button onClick={createSaveHandler('pdf')} className="w-full text-left px-4 py-2 hover:bg-slate-100">PDF</button></li>
+                                <li><button onClick={createSaveHandler('csv')} className="w-full text-left px-4 py-2 hover:bg-slate-100">CSV</button></li>
+                                <li><button onClick={createSaveHandler('xlsx')} className="w-full text-left px-4 py-2 hover:bg-slate-100">XLSX</button></li>
+                                <li><button onClick={createSaveHandler('docx')} className="w-full text-left px-4 py-2 hover:bg-slate-100">DOCX</button></li>
                             </ul>
                         </div>
                     )}
@@ -315,7 +315,7 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
 
                 <button
                     onClick={handleCopy}
-                    className="flex items-center px-3 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-md hover:bg-slate-300 dark:hover:bg-slate-600 transition text-sm"
+                    className="flex items-center px-3 py-1 bg-slate-200 text-slate-600 rounded-md hover:bg-slate-300 transition text-sm"
                     aria-label="Copy report to clipboard"
                 >
                     {copied ? (
@@ -333,13 +333,13 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
             <div className="max-h-[60vh] overflow-y-auto">
                  {warnings && warnings.length > 0 && (
                     <Collapsible 
-                        title={<span className="text-amber-600 dark:text-amber-400">Warnings</span>} 
+                        title={<span className="text-amber-600">Warnings</span>} 
                         defaultOpen={true}
                         count={warnings.length}
                     >
                         <div className="py-2 pr-4 text-xs md:text-sm space-y-2" style={{ paddingLeft: '2.25rem' }}>
                             {warnings.map((warning, index) => (
-                                <p key={index} className="text-slate-600 dark:text-slate-400">{warning}</p>
+                                <p key={index} className="text-slate-600">{warning}</p>
                             ))}
                         </div>
                     </Collapsible>
@@ -361,19 +361,19 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                                     level={1} 
                                     title={
                                         filename === 'General Error'
-                                        ? <span className="italic text-amber-600 dark:text-amber-400">General Error</span>
+                                        ? <span className="italic text-amber-600">General Error</span>
                                         : <span><span className="font-light text-slate-500 mr-2">File:</span> {filename}</span>
                                     }
                                     count={reconciledErrors.length > 0 ? reconciledErrors.length : undefined}
                                 >
                                     {filename === 'General Error' ? (
-                                        <div className="text-slate-500 dark:text-slate-400 italic px-4 py-2 text-xs md:text-sm" style={{ paddingLeft: '3.5rem' }}>This is a general error with no specific file or line number.</div>
+                                        <div className="text-slate-500 italic px-4 py-2 text-xs md:text-sm" style={{ paddingLeft: '3.5rem' }}>This is a general error with no specific file or line number.</div>
                                     ) : (
                                         <div className="font-mono text-xs md:text-sm space-y-1 py-2 pr-4" style={{ paddingLeft: '2.25rem' }}>
                                             {reconciledErrors.map(({ lineNumber, rowData }, index) => (
-                                                <div key={index} className="flex hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded p-1">
-                                                    <span className="w-16 text-right pr-4 text-slate-400 dark:text-slate-500 select-none">{lineNumber}:</span>
-                                                    <code className="flex-1 whitespace-pre-wrap break-all text-slate-700 dark:text-slate-300">{rowData}</code>
+                                                <div key={index} className="flex hover:bg-slate-100 rounded p-1">
+                                                    <span className="w-16 text-right pr-4 text-slate-400 select-none">{lineNumber}:</span>
+                                                    <code className="flex-1 whitespace-pre-wrap break-all text-slate-700">{rowData}</code>
                                                 </div>
                                             ))}
                                         </div>

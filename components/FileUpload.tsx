@@ -48,7 +48,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, label, acc
         onFileSelect(e.target.files);
     };
 
-    const dragClass = isDragging ? 'border-leafio-500 bg-leafio-50 dark:bg-leafio-900/50' : 'border-slate-300 dark:border-slate-600 hover:border-leafio-400 dark:hover:border-leafio-500';
+    const dragClass = isDragging ? 'border-leafio-500 bg-leafio-50' : 'border-slate-300 hover:border-leafio-400';
 
     return (
         <label
@@ -56,17 +56,17 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, label, acc
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            className={`flex flex-col items-center justify-center w-full h-32 px-4 transition bg-white dark:bg-slate-700/50 border-2 ${dragClass} border-dashed rounded-md cursor-pointer`}
+            className={`flex flex-col items-center justify-center w-full h-32 px-4 transition bg-white border-2 ${dragClass} border-dashed rounded-md cursor-pointer`}
         >
             <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
-                <UploadIcon className="w-8 h-8 mb-3 text-slate-400 dark:text-slate-500" />
-                <p className="mb-2 text-sm text-slate-500 dark:text-slate-400">
-                    <span className="font-semibold text-leafio-600 dark:text-leafio-400">{label}</span> or drag and drop
+                <UploadIcon className="w-8 h-8 mb-3 text-slate-400" />
+                <p className="mb-2 text-sm text-slate-500">
+                    <span className="font-semibold text-leafio-600">{label}</span> or drag and drop
                 </p>
                 {selectedFile ? (
-                     <p className="text-xs text-green-600 dark:text-green-400 font-semibold truncate max-w-full px-4">{selectedFile}</p>
+                     <p className="text-xs text-green-600 font-semibold truncate max-w-full px-4">{selectedFile}</p>
                 ) : (
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{accept}</p>
+                    <p className="text-xs text-slate-500">{accept}</p>
                 )}
             </div>
             <input
