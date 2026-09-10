@@ -1,10 +1,23 @@
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { CopyIcon, CheckIcon, SaveIcon, ChevronDownIcon } from './Icons';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { CopyIcon, CheckIcon, SaveIcon, ChevronDownIcon, SearchIcon } from './Icons';
 import { ReportOutput } from '../services/logProcessor';
+import { ReportData } from '../types';
 import { jsPDF } from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import * as XLSX from 'xlsx';
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const highlightMatch = (text: string, term: string): React.ReactNode => {
+    if (!term.trim()) return text;
+    const parts = text.split(new RegExp(`(${escapeRegExp(term)})`, 'gi'));
+    return parts.map((part, i) =>
+        part.toLowerCase() === term.toLowerCase()
+            ? <mark key={i} className="bg-yellow-200 text-slate-900 rounded-sm px-0.5">{part}</mark>
+            : part
+    );
+};
 
 interface ReportDisplayProps {
     reportOutput: ReportOutput;
@@ -22,8 +35,12 @@ const downloadBlob = (blob: Blob, filename: string) => {
 };
 
 
-const Collapsible: React.FC<{ title: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean, level?: number, count?: number }> = ({ title, children, defaultOpen = false, level = 0, count }) => {
+const Collapsible: React.FC<{ title: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean, level?: number, count?: number, openOverride?: boolean }> = ({ title, children, defaultOpen = false, level = 0, count, openOverride }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
+
+    useEffect(() => {
+        if (openOverride !== undefined) setIsOpen(openOverride);
+    }, [openOverride]);
 
     const paddingLeft = {
         paddingLeft: `${level * 1.25 + 1}rem`
@@ -55,6 +72,7 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
     const { reportString, reportData, warnings, fileHeaders } = reportOutput;
     const [copied, setCopied] = useState(false);
     const [isSaveMenuOpen, setIsSaveMenuOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     let totalErrors = 0;
     const filesWithErrorsSet = new Set<string>();
@@ -68,6 +86,44 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
     }
     const totalFilesWithErrors = filesWithErrorsSet.size;
     const saveMenuRef = useRef<HTMLDivElement>(null);
+
+    const filteredReportData = useMemo<ReportData>(() => {
+        const term = searchTerm.trim().toLowerCase();
+        if (!term) return reportData;
+
+        const result: ReportData = {};
+        for (const [errorMessage, files] of Object.entries(reportData)) {
+            const errorMatches = errorMessage.toLowerCase().includes(term);
+            const matchedFiles: ReportData[string] = {};
+            for (const [filename, errors] of Object.entries(files)) {
+                if (filename === 'General Error') {
+                    if (errorMatches) matchedFiles[filename] = errors;
+                    continue;
+                }
+                const filenameMatches = filename.toLowerCase().includes(term);
+                const matchedErrors = errorMatches || filenameMatches
+                    ? errors
+                    : errors.filter(({ lineNumber, rowData }) =>
+                        String(lineNumber).includes(term) || rowData.toLowerCase().includes(term)
+                    );
+                if (matchedErrors.length > 0) matchedFiles[filename] = matchedErrors;
+            }
+            if (Object.keys(matchedFiles).length > 0) result[errorMessage] = matchedFiles;
+        }
+        return result;
+    }, [reportData, searchTerm]);
+
+    const filteredMatchCount = useMemo(() => {
+        let count = 0;
+        for (const errorMessage in filteredReportData) {
+            for (const filename in filteredReportData[errorMessage]) {
+                count += filteredReportData[errorMessage][filename].length;
+            }
+        }
+        return count;
+    }, [filteredReportData]);
+
+    const isSearching = searchTerm.trim().length > 0;
 
     const getTimestamp = () => {
         const now = new Date();
@@ -279,17 +335,40 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
 
     return (
         <div className="flex flex-col bg-slate-50 rounded-lg shadow-inner overflow-hidden">
-            <div className="flex justify-between items-center p-3 bg-slate-100 border-b border-slate-200 z-20">
+            <div className="flex flex-col gap-2 p-3 bg-slate-100 border-b border-slate-200 z-20 md:flex-row md:items-center md:justify-between">
                 <div className="text-sm text-slate-600 px-2 flex items-center flex-wrap">
-                    <span className="font-semibold text-slate-800 mr-1">{totalErrors}</span> errors in 
+                    <span className="font-semibold text-slate-800 mr-1">{totalErrors}</span> errors in
                     <span className="font-semibold text-slate-800 ml-1 mr-1">{totalFilesWithErrors}</span> files
                     {warnings && warnings.length > 0 && (
                         <span className="ml-2 text-amber-600">
                             ({warnings.length} warning{warnings.length !== 1 ? 's' : ''})
                         </span>
                     )}
+                    {isSearching && (
+                        <span className="ml-2 text-slate-500">— {filteredMatchCount} match{filteredMatchCount !== 1 ? 'es' : ''}</span>
+                    )}
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
+                    <div className="relative flex-1 md:flex-initial md:w-64">
+                        <SearchIcon className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search errors..."
+                            className="w-full pl-8 pr-8 py-1.5 text-sm bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-leafio-500 focus:border-transparent"
+                            aria-label="Search report"
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                aria-label="Clear search"
+                            >
+                                &times;
+                            </button>
+                        )}
+                    </div>
                     <div className="relative" ref={saveMenuRef}>
                         <button
                         onClick={() => setIsSaveMenuOpen(prev => !prev)}
@@ -347,39 +426,63 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                  {Object.keys(reportData).length === 0 && warnings.length === 0 && (
                     <div className="p-4 text-center text-slate-500">No reconcilable errors found in the provided files.</div>
                  )}
-                 {Object.entries(reportData).map(([errorMessage, files], errorIndex) => {
+                 {Object.keys(reportData).length > 0 && isSearching && Object.keys(filteredReportData).length === 0 && (
+                    <div className="p-4 text-center text-slate-500">No errors match "{searchTerm}".</div>
+                 )}
+                 {Object.entries(filteredReportData).map(([errorMessage, files], errorIndex) => {
                      const totalErrors = Object.values(files).reduce((acc, fileErrors) => acc + (fileErrors.length || 1), 0);
                      return (
-                        <Collapsible 
-                            key={errorIndex} 
-                            title={<span><span className="font-light text-slate-500 mr-2">ERROR:</span> {errorMessage}</span>}
+                        <Collapsible
+                            key={errorIndex}
+                            title={<span><span className="font-light text-slate-500 mr-2">ERROR:</span> {highlightMatch(errorMessage, searchTerm)}</span>}
                             count={totalErrors}
+                            openOverride={isSearching ? true : undefined}
                         >
-                            {Object.entries(files).map(([filename, reconciledErrors], fileIndex) => (
-                                <Collapsible 
-                                    key={`${errorIndex}-${fileIndex}`} 
-                                    level={1} 
+                            {Object.entries(files).map(([filename, reconciledErrors], fileIndex) => {
+                                const headers = fileHeaders?.[filename] || ['Row Data'];
+                                return (
+                                <Collapsible
+                                    key={`${errorIndex}-${fileIndex}`}
+                                    level={1}
                                     title={
                                         filename === 'General Error'
                                         ? <span className="italic text-amber-600">General Error</span>
-                                        : <span><span className="font-light text-slate-500 mr-2">File:</span> {filename}</span>
+                                        : <span><span className="font-light text-slate-500 mr-2">File:</span> {highlightMatch(filename, searchTerm)}</span>
                                     }
                                     count={reconciledErrors.length > 0 ? reconciledErrors.length : undefined}
+                                    openOverride={isSearching ? true : undefined}
                                 >
                                     {filename === 'General Error' ? (
                                         <div className="text-slate-500 italic px-4 py-2 text-xs md:text-sm" style={{ paddingLeft: '3.5rem' }}>This is a general error with no specific file or line number.</div>
                                     ) : (
-                                        <div className="font-mono text-xs md:text-sm space-y-1 py-2 pr-4" style={{ paddingLeft: '2.25rem' }}>
-                                            {reconciledErrors.map(({ lineNumber, rowData }, index) => (
-                                                <div key={index} className="flex hover:bg-slate-100 rounded p-1">
-                                                    <span className="w-16 text-right pr-4 text-slate-400 select-none">{lineNumber}:</span>
-                                                    <code className="flex-1 whitespace-pre-wrap break-all text-slate-700">{rowData}</code>
-                                                </div>
-                                            ))}
+                                        <div className="overflow-x-auto py-2 pr-4" style={{ paddingLeft: '2.25rem' }}>
+                                            <table className="min-w-full text-xs md:text-sm border-collapse">
+                                                <thead>
+                                                    <tr className="text-left text-slate-500 border-b border-slate-200">
+                                                        <th className="py-1 pr-4 font-medium whitespace-nowrap sticky left-0 bg-white">Line</th>
+                                                        {headers.map((header, i) => (
+                                                            <th key={i} className="py-1 pr-4 font-medium whitespace-nowrap">{header || `Col ${i + 1}`}</th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {reconciledErrors.map(({ lineNumber, rowData, parsedRowData }, index) => {
+                                                        const cells = parsedRowData && parsedRowData.length > 0 ? parsedRowData : [rowData];
+                                                        return (
+                                                            <tr key={index} className="hover:bg-slate-100 border-b border-slate-100 last:border-b-0">
+                                                                <td className="py-1 pr-4 text-right text-slate-400 select-none whitespace-nowrap align-top sticky left-0 bg-white">{lineNumber}</td>
+                                                                {cells.map((cell, i) => (
+                                                                    <td key={i} className="py-1 pr-4 text-slate-700 align-top whitespace-pre-wrap break-all">{highlightMatch(cell ?? '', searchTerm)}</td>
+                                                                ))}
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     )}
                                 </Collapsible>
-                            ))}
+                            )})}
                         </Collapsible>
                      )
                  })}
