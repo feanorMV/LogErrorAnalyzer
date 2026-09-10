@@ -348,8 +348,8 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                         <span className="ml-2 text-slate-500">— {filteredMatchCount} match{filteredMatchCount !== 1 ? 'es' : ''}</span>
                     )}
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="relative flex-1 md:flex-initial md:w-64">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="relative w-full sm:w-64">
                         <SearchIcon className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
                             type="text"
@@ -369,44 +369,46 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                             </button>
                         )}
                     </div>
-                    <div className="relative" ref={saveMenuRef}>
-                        <button
-                        onClick={() => setIsSaveMenuOpen(prev => !prev)}
-                        className="flex items-center px-3 py-1 bg-slate-200 text-slate-600 rounded-md hover:bg-slate-300 transition text-sm"
-                        aria-label="Open save options"
-                    >
-                        <SaveIcon className="w-4 h-4 mr-2" />
-                        <span>Save as...</span>
-                        <ChevronDownIcon className="w-4 h-4 ml-1" />
-                    </button>
-                    {isSaveMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10 border border-slate-200">
-                            <ul className="py-1 text-sm text-slate-700">
-                                <li><button onClick={createSaveHandler('txt')} className="w-full text-left px-4 py-2 hover:bg-slate-100">TXT</button></li>
-                                <li><button onClick={createSaveHandler('pdf')} className="w-full text-left px-4 py-2 hover:bg-slate-100">PDF</button></li>
-                                <li><button onClick={createSaveHandler('csv')} className="w-full text-left px-4 py-2 hover:bg-slate-100">CSV</button></li>
-                                <li><button onClick={createSaveHandler('xlsx')} className="w-full text-left px-4 py-2 hover:bg-slate-100">XLSX</button></li>
-                                <li><button onClick={createSaveHandler('docx')} className="w-full text-left px-4 py-2 hover:bg-slate-100">DOCX</button></li>
-                            </ul>
+                    <div className="flex items-center justify-end gap-2 sm:justify-start">
+                        <div className="relative" ref={saveMenuRef}>
+                            <button
+                            onClick={() => setIsSaveMenuOpen(prev => !prev)}
+                            className="flex items-center whitespace-nowrap px-3 py-1 bg-slate-200 text-slate-600 rounded-md hover:bg-slate-300 transition text-sm"
+                            aria-label="Open save options"
+                        >
+                            <SaveIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                            <span>Save as...</span>
+                            <ChevronDownIcon className="w-4 h-4 ml-1 flex-shrink-0" />
+                        </button>
+                        {isSaveMenuOpen && (
+                            <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10 border border-slate-200">
+                                <ul className="py-1 text-sm text-slate-700">
+                                    <li><button onClick={createSaveHandler('txt')} className="w-full text-left px-4 py-2 hover:bg-slate-100">TXT</button></li>
+                                    <li><button onClick={createSaveHandler('pdf')} className="w-full text-left px-4 py-2 hover:bg-slate-100">PDF</button></li>
+                                    <li><button onClick={createSaveHandler('csv')} className="w-full text-left px-4 py-2 hover:bg-slate-100">CSV</button></li>
+                                    <li><button onClick={createSaveHandler('xlsx')} className="w-full text-left px-4 py-2 hover:bg-slate-100">XLSX</button></li>
+                                    <li><button onClick={createSaveHandler('docx')} className="w-full text-left px-4 py-2 hover:bg-slate-100">DOCX</button></li>
+                                </ul>
+                            </div>
+                        )}
                         </div>
-                    )}
-                </div>
 
-                <button
-                    onClick={handleCopy}
-                    className="flex items-center px-3 py-1 bg-slate-200 text-slate-600 rounded-md hover:bg-slate-300 transition text-sm"
-                    aria-label="Copy report to clipboard"
-                >
-                    {copied ? (
-                        <>
-                            <CheckIcon className="w-4 h-4 mr-2 text-green-500" /> Copied!
-                        </>
-                    ) : (
-                        <>
-                            <CopyIcon className="w-4 h-4 mr-2" /> Copy
-                        </>
-                    )}
-                </button>
+                        <button
+                            onClick={handleCopy}
+                            className="flex items-center whitespace-nowrap px-3 py-1 bg-slate-200 text-slate-600 rounded-md hover:bg-slate-300 transition text-sm"
+                            aria-label="Copy report to clipboard"
+                        >
+                            {copied ? (
+                                <>
+                                    <CheckIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0" /> Copied!
+                                </>
+                            ) : (
+                                <>
+                                    <CopyIcon className="w-4 h-4 mr-2 flex-shrink-0" /> Copy
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
             <div className="max-h-[60vh] overflow-y-auto">
@@ -455,7 +457,7 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                                     {filename === 'General Error' ? (
                                         <div className="text-slate-500 italic px-4 py-2 text-xs md:text-sm" style={{ paddingLeft: '3.5rem' }}>This is a general error with no specific file or line number.</div>
                                     ) : (
-                                        <div className="overflow-x-auto py-2 pr-4" style={{ paddingLeft: '2.25rem' }}>
+                                        <div className="overflow-x-auto py-2 pl-5 pr-2 sm:pl-9 sm:pr-4">
                                             <table className="min-w-full text-xs md:text-sm border-collapse">
                                                 <thead>
                                                     <tr className="text-left text-slate-500 border-b border-slate-200">
@@ -472,7 +474,7 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ reportOutput }) =>
                                                             <tr key={index} className="hover:bg-slate-100 border-b border-slate-100 last:border-b-0">
                                                                 <td className="py-1 pr-4 text-right text-slate-400 select-none whitespace-nowrap align-top sticky left-0 bg-white">{lineNumber}</td>
                                                                 {cells.map((cell, i) => (
-                                                                    <td key={i} className="py-1 pr-4 text-slate-700 align-top whitespace-pre-wrap break-all">{highlightMatch(cell ?? '', searchTerm)}</td>
+                                                                    <td key={i} title={cell} className="py-1 pr-4 text-slate-700 align-top whitespace-nowrap overflow-hidden text-ellipsis max-w-[10rem] sm:max-w-[14rem]">{highlightMatch(cell ?? '', searchTerm)}</td>
                                                                 ))}
                                                             </tr>
                                                         );
